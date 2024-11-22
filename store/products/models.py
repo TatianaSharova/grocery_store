@@ -9,6 +9,7 @@ User = get_user_model()
 class Product_group(models.Model):
     '''Модель для определения категории.'''
     name = models.CharField('Название', unique=True,
+                            max_length=MAX_LENGTH,
                             blank=False)
     slug = models.SlugField('Слаг',
                             max_length=MAX_LENGTH,
@@ -28,6 +29,7 @@ class Product_group(models.Model):
 class Type(models.Model):
     '''Модель для определения подкатегории.'''
     name = models.CharField('Название', unique=True,
+                            max_length=MAX_LENGTH,
                             blank=False)
     slug = models.SlugField('Слаг',
                             max_length=MAX_LENGTH,
@@ -80,11 +82,26 @@ class Product(models.Model):
         return f'{self.type.name} {self.name}'
 
 
-class UserProduct(models.Model):
-    '''Модель для добавления продуктов в корзину.'''
+class Cart(models.Model):
+    '''Модель для определения продуктовой корзины.'''
     user = models.ForeignKey(User, on_delete=models.CASCADE,
                              verbose_name='Пользователь')
-    product = models.ForeignKey(Product,
+    products = models.ManyToManyField(Product, through='CartProduct',
+                                      verbose_name='Содержание корзины')
+    
+    class Meta:
+        verbose_name = 'Корзина пользователя'
+        verbose_name_plural = 'Корзины пользователей'
+        ordering = ('user',)
+
+    def __str__(self):
+        return f'Содержание корзины пользователя {self.user}: {self.products}.'
+    
+class CartProduct(models.Model):
+    '''Модель для добавления продуктов в корзину.'''
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE,
+                             verbose_name='Корзина')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE,
                                 verbose_name='Содержание корзины')
     amount = models.SmallIntegerField(
         'Количество',
@@ -96,32 +113,14 @@ class UserProduct(models.Model):
     class Meta:
         verbose_name = 'Продукт в корзине'
         verbose_name_plural = 'Продукты в корзине'
-        ordering = ('user',)
+        ordering = ('cart',)
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'products'],
-                name='unique_recipe_in_cart')]
+                fields=['cart', 'product'],
+                name='unique_product_in_cart')]
 
     def __str__(self):
-        return f'{self.user} добавил в корзину {self.amount} {self.product}.'
-
-
-class Cart(models.Model):
-    '''Модель для определения продуктовой корзины.'''
-    user = models.ForeignKey(User, on_delete=models.CASCADE,
-                             verbose_name='Пользователь')
-    products = models.ManyToManyField(Product, through='UserProduct',
-                                      verbose_name='Содержание корзины')
-    
-    class Meta:
-        verbose_name = 'Корзина пользователя'
-        verbose_name_plural = 'Корзины пользователей'
-        ordering = ('user',)
-
-    def __str__(self):
-        return f'Содержание корзины пользователя {self.user}: {self.products}.'
-    
-
+        return f'В корзину добавили {self.amount} {self.product}.'
 
 
     
