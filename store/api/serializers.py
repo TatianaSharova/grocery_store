@@ -1,4 +1,4 @@
-from products.models import User, Product, Product_group, Type, Cart, UserProduct
+from products.models import User, Product, Product_group, Type, Cart, CartProduct
 import base64
 
 from django.core.files.base import ContentFile
@@ -35,9 +35,19 @@ class Base64ImageField(serializers.ImageField):
 
 
 class ProductGroupSerializer(serializers.ModelSerializer):
-    '''Serializer для добавления, чтения, редактирования
+    '''Serializer для добавления, редактирования
     и удаления продуктовой категории.'''
     image = Base64ImageField()
+
+    class Meta:
+        model = Product_group
+        fields = (
+            'id', 'name', 'slug', 'image'
+        )
+
+
+class ProductGroupReadSerializer(serializers.ModelSerializer):
+    '''Serializer для чтения  продуктовой категории.'''
 
     class Meta:
         model = Product_group
@@ -96,7 +106,7 @@ class ProductReadSerializer(serializers.ModelSerializer):
         '''Находится ли продукт в корзине.'''
         user = self.context.get('request').user
         if not user.is_anonymous:
-            return UserProduct.objects.filter(user=user, product=obj).exists()
+            return CartProduct.objects.filter(user=user, product=obj).exists()
         return False
 
 
@@ -105,7 +115,7 @@ class ProductInCart(serializers.ModelSerializer):
     name = serializers.ReadOnlyField(source='product.name')
 
     class Meta:
-        model = UserProduct
+        model = CartProduct
         fields = ('id', 'name', 'amount')
 
 
