@@ -23,7 +23,6 @@ class Product_groupViewSet(viewsets.ModelViewSet):
     '''
     queryset = Product_group.objects.all()
     permission_classes = (IsAdminOrReadOnly,)
-    serializer_class = ProductGroupSerializer
 
     def get_serializer_class(self):
         if self.request.method in permissions.SAFE_METHODS:
@@ -48,6 +47,11 @@ class ProductViewSet(viewsets.ModelViewSet):
     '''
     queryset = Product.objects.all()
     permission_classes = (IsAdminOrReadOnly,)
+    
+    def get_serializer_class(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return ProductReadSerializer
+        return ProductAddSerializer
 
 
 class CartViewSet(viewsets.ModelViewSet):

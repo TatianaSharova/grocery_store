@@ -34,31 +34,10 @@ class Base64ImageField(serializers.ImageField):
         return super().to_internal_value(data)
 
 
-class ProductGroupSerializer(serializers.ModelSerializer):
-    '''Serializer для добавления, редактирования
-    и удаления продуктовой категории.'''
-    image = Base64ImageField()
-
-    class Meta:
-        model = Product_group
-        fields = (
-            'id', 'name', 'slug', 'image'
-        )
-
-
-class ProductGroupReadSerializer(serializers.ModelSerializer):
-    '''Serializer для чтения  продуктовой категории.'''
-
-    class Meta:
-        model = Product_group
-        fields = (
-            'id', 'name', 'slug', 'image'
-        )
-
-
-class TypeSerializer(ProductGroupSerializer):
+class TypeSerializer(serializers.ModelSerializer):
     '''Serializer для добавления, редактирования, чтения
     и удаления подкатегории продуктов.'''
+    image = Base64ImageField()
     product_group = serializers.PrimaryKeyRelatedField(
         queryset=Product_group.objects.all())
     
@@ -69,12 +48,50 @@ class TypeSerializer(ProductGroupSerializer):
         )
 
 
+class TypeSmallSerializer(serializers.ModelSerializer):
+    '''Serializer для чтения подкатегории продуктов.'''
+    
+    class Meta:
+        model = Type
+        fields = (
+            'id', 'name', 'slug', 'image'
+        )
+
+
+class ProductGroupReadSerializer(serializers.ModelSerializer):
+    '''Serializer для чтения продуктовой категории.'''
+    types = TypeSmallSerializer(many=True, read_only=True,
+                                source='type_set')
+
+    class Meta:
+        model = Product_group
+        fields = (
+            'id', 'name', 'slug', 'image', 'types'
+        )
+
+
+class ProductGroupSerializer(serializers.ModelSerializer):
+    '''Serializer для добавления, редактирования
+    и удаления продуктовой категории.'''
+    image = Base64ImageField()
+
+    class Meta:
+        model = Product_group
+        fields = (
+            'id', 'name', 'slug', 'image'
+        )
+    
+    def to_representation(self, instance):
+        return ProductGroupReadSerializer(
+            instance, context={'request': self.context.get('request')}
+        ).data
+
+
 class ProductAddSerializer(serializers.ModelSerializer):
     '''Serializer для добавления и редактирования продуктов.'''
     image = Base64ImageField()
     type = serializers.PrimaryKeyRelatedField(
         queryset=Type.objects.all())
-    # product_group = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -88,7 +105,7 @@ class ProductReadSerializer(serializers.ModelSerializer):
     '''Serializer для чтения продуктов.'''
     type = serializers.PrimaryKeyRelatedField(
         queryset=Type.objects.all())
-    product_group = serializers.SerializerMethodField()
+    product_group = serializers.ReadOnlyField(source='type.product_group.name')
     is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
@@ -98,16 +115,20 @@ class ProductReadSerializer(serializers.ModelSerializer):
             'type', 'product_group', 'is_in_shopping_cart'
         )
     
-    def get_product_group(self, obj):
-        '''Определяет к какой категории продуктов относится.'''
-        return self.type.product_group
-    
     def get_is_in_shopping_cart(self, obj):
         '''Находится ли продукт в корзине.'''
         user = self.context.get('request').user
         if not user.is_anonymous:
             return CartProduct.objects.filter(user=user, product=obj).exists()
         return False
+    
+    def to_representation(self, instance):
+        '''Удаляет поле is_in_shopping_cart для анонимных пользователей.'''
+        representation = super().to_representation(instance)
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            representation.pop('is_in_shopping_cart', None)
+        return representation
 
 
 class ProductInCart(serializers.ModelSerializer):
