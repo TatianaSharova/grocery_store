@@ -80,6 +80,11 @@ class Product(models.Model):
 
     def __str__(self):
         return f'{self.type.name} {self.name}'
+    
+    @property
+    def product_group(self):
+        '''Возвращает категорию продукта через подкатегорию.'''
+        return self.type.product_group
 
 
 class Cart(models.Model):

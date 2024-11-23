@@ -9,28 +9,41 @@ class CartProductInline(admin.TabularInline):
     min_num = MIN_NUM
 
 
+class TypeInline(admin.TabularInline):
+    model = Type
+    extra = MIN_NUM
+    min_num = MIN_NUM
+
+
 @admin.register(Product_group)
 class Product_groupAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'slug', 'image')
     search_fields = ('name', 'slug')
     empty_value_display = EMPTY_VALUE
+    inlines = (TypeInline,)
 
 
 @admin.register(Type)
 class TypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'slug',
                     'product_group', 'image')
-    search_fields = ('name', 'slug')
+    search_fields = ('name', 'product_group__name')
+    list_filter = ('product_group',)
     empty_value_display = EMPTY_VALUE
 
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'slug', 'type',
-                    'price',)
+    list_display = ('id', 'name', 'product_group', 'type',
+                    'slug', 'price',)
     search_fields = ('name', 'slug')
-    list_filter = ('name', 'type',)
+    list_filter = ('type__product_group', 'type')
     empty_value_display = EMPTY_VALUE
+
+    def product_group(self, obj):
+        '''Отображает категорию в списке продуктов.'''
+        return obj.product_group.name
+    product_group.short_description = 'Категория'
 
 
 @admin.register(Cart)
