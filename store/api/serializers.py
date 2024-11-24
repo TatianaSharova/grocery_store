@@ -11,7 +11,6 @@ from rest_framework.validators import UniqueTogetherValidator
 
 class UserCreationSerializer(UserCreateSerializer):
     '''Serializer для создания пользователя.'''
-
     class Meta:
         model = User
         fields = (
@@ -49,7 +48,8 @@ class TypeSerializer(serializers.ModelSerializer):
 
 
 class TypeSmallSerializer(serializers.ModelSerializer):
-    '''Serializer для чтения подкатегории продуктов.'''
+    '''Serializer для чтения списка подкатегории продуктов
+    в каждой категории.'''
     
     class Meta:
         model = Type
@@ -103,16 +103,16 @@ class ProductAddSerializer(serializers.ModelSerializer):
 
 class ProductReadSerializer(serializers.ModelSerializer):
     '''Serializer для чтения продуктов.'''
-    type = serializers.PrimaryKeyRelatedField(
-        queryset=Type.objects.all())
+    type = SlugRelatedField(slug_field='name',
+                            read_only=True)
     product_group = serializers.ReadOnlyField(source='type.product_group.name')
     is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = (
-            'id', 'name', 'slug', 'image',
-            'type', 'product_group', 'is_in_shopping_cart'
+            'name', 'slug', 'image',
+            'type', 'product_group', 'price', 'is_in_shopping_cart'
         )
     
     def get_is_in_shopping_cart(self, obj):
@@ -132,12 +132,11 @@ class ProductReadSerializer(serializers.ModelSerializer):
 
 
 class ProductInCart(serializers.ModelSerializer):
-    id = serializers.ReadOnlyField(source='product.id')
     name = serializers.ReadOnlyField(source='product.name')
 
     class Meta:
         model = CartProduct
-        fields = ('id', 'name', 'amount')
+        fields = ('name', 'amount')
 
 
 
