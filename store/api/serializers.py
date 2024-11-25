@@ -1,4 +1,4 @@
-from products.models import User, Product, Product_group, Type, Cart, CartProduct
+from products.models import User, Product, Product_group, Type, Cart, CartProduct, ProductImage
 import base64
 
 from django.core.files.base import ContentFile
@@ -87,22 +87,52 @@ class ProductGroupSerializer(serializers.ModelSerializer):
         ).data
 
 
+class ProductImageSerializer(serializers.ModelSerializer):
+    '''Сериализатор для изображений продукта.'''
+
+    class Meta:
+        model = ProductImage
+        fields = ['id', 'image']
+
+
+class ProductImageAddSerializer(serializers.ModelSerializer):
+    '''Сериализатор для изображений продукта.'''
+    image = Base64ImageField()
+    class Meta:
+        model = ProductImage
+        fields = ['image',]
+
+
 class ProductAddSerializer(serializers.ModelSerializer):
     '''Serializer для добавления и редактирования продуктов.'''
-    image = Base64ImageField()
-    type = serializers.PrimaryKeyRelatedField(
-        queryset=Type.objects.all())
+    images = ProductImageAddSerializer(many=True, write_only=True)
+    type = SlugRelatedField(slug_field='name',
+                            queryset=Type.objects.all(),
+                            write_only=True)
 
     class Meta:
         model = Product
         fields = (
-            'id', 'name', 'slug', 'image',
-            'type'
+            'name', 'slug', 'images',
+            'type', 'price', 'in_stock'
         )
+    
+    def to_representation(self, instance):
+        return ProductReadSerializer(
+            instance, context={'request': self.context.get('request')}
+        ).data
+    
+    def create(self, validated_data):
+        images_data = validated_data.pop('images')
+        product = Product.objects.create(**validated_data)
+        for image_data in images_data:
+            ProductImage.objects.create(product=product, **image_data)
+        return product
 
 
 class ProductReadSerializer(serializers.ModelSerializer):
     '''Serializer для чтения продуктов.'''
+    images = ProductImageSerializer(many=True, read_only=True)
     type = SlugRelatedField(slug_field='name',
                             read_only=True)
     product_group = serializers.ReadOnlyField(source='type.product_group.name')
@@ -111,15 +141,15 @@ class ProductReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = (
-            'name', 'slug', 'image',
-            'type', 'product_group', 'price', 'is_in_shopping_cart'
+            'name', 'slug', 'type', 'product_group', 'price',
+            'images', 'in_stock', 'is_in_shopping_cart'
         )
     
     def get_is_in_shopping_cart(self, obj):
         '''Находится ли продукт в корзине.'''
         user = self.context.get('request').user
         if not user.is_anonymous:
-            return CartProduct.objects.filter(user=user, product=obj).exists()
+            return CartProduct.objects.filter(cart__user=user, product=obj).exists()
         return False
     
     def to_representation(self, instance):
