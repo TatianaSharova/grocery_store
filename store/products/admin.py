@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Cart, Product, Product_group, Type, CartProduct
+from .models import Cart, Product, Product_group, Type, CartProduct, ProductImage
 from store.constans import MIN_NUM, EMPTY_VALUE
 
 class CartProductInline(admin.TabularInline):
@@ -7,6 +7,13 @@ class CartProductInline(admin.TabularInline):
     autocomplete_fields = ('product',)
     extra = MIN_NUM
     min_num = MIN_NUM
+
+
+class ProductImageInline(admin.TabularInline):
+    model = ProductImage
+    extra = 3
+    min_num = 3
+    max_num = 3
 
 
 class TypeInline(admin.TabularInline):
@@ -38,6 +45,7 @@ class ProductAdmin(admin.ModelAdmin):
                     'slug', 'price',)
     search_fields = ('name', 'slug')
     list_filter = ('type__product_group', 'type')
+    inlines = (ProductImageInline,)
     empty_value_display = EMPTY_VALUE
 
     def product_group(self, obj):

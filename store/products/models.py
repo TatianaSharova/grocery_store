@@ -63,8 +63,6 @@ class Product(models.Model):
             MinValueValidator(
                 MIN_NUM, f'Минимальная цена {MIN_NUM}'),
         ],)
-    image = models.ImageField('Изображение',
-                              upload_to='product/')
     in_stock = models.SmallIntegerField(
         'Остаток в магазине',
         validators=[
@@ -85,6 +83,22 @@ class Product(models.Model):
     def product_group(self):
         '''Возвращает категорию продукта через подкатегорию.'''
         return self.type.product_group
+
+
+class ProductImage(models.Model):
+    '''Модель для изображений продукта.'''
+    product = models.ForeignKey(
+        'Product', on_delete=models.CASCADE, related_name='images', verbose_name='Продукт'
+    )
+    image = models.ImageField('Изображение', upload_to='product/')
+
+    class Meta:
+        verbose_name = 'Изображение продукта'
+        verbose_name_plural = 'Изображения продуктов'
+        ordering = ('product',)
+
+    def __str__(self):
+        return f'{self.product.name} - {self.image}'
 
 
 class Cart(models.Model):
