@@ -77,7 +77,7 @@ class Product(models.Model):
         ordering = ('name',)
 
     def __str__(self):
-        return f'{self.type.name} {self.name}'
+        return f'{self.name}'
     
     @property
     def product_group(self):
@@ -114,7 +114,7 @@ class Cart(models.Model):
         ordering = ('user',)
 
     def __str__(self):
-        return f'Содержание корзины пользователя {self.user}: {self.products}.'
+        return f'Содержание корзины пользователя {self.user}.'
     
 class CartProduct(models.Model):
     '''Модель для добавления продуктов в корзину.'''
