@@ -85,9 +85,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    # 'DEFAULT_FILTER_BACKENDS': [
-    #     'django_filters.rest_framework.DjangoFilterBackend',
-    # ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
@@ -95,8 +92,8 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ],
     'SEARCH_PARAM': 'name',
-    'DEFAULT_PAGINATION_CLASS': 'api.pagination.LimitPagination',
-    'PAGE_SIZE': 5,
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 3,
 }
 
 
@@ -107,10 +104,10 @@ DJOSER = {
         # 'current_user': 'api.serializers.UserInfoSerializer',
     },
     'PERMISSIONS': {
-        'user_list': ['rest_framework.permissions.AllowAny'],
+        'user_list': ['rest_framework.permissions.IsAdminUser'],
         'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
     },
-    'HIDE_USERS': False,
+    # 'HIDE_USERS': False,
 }
 
 
@@ -121,8 +118,6 @@ LANGUAGE_CODE = 'ru-RU'
 TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
-
-USE_L10N = True
 
 USE_TZ = True
 
