@@ -1,10 +1,11 @@
-from products.models import User, Product, Product_group, Type, Cart, CartProduct, ProductImage
+from products.models import (User, Product, Product_group, Type,
+                             Cart, CartProduct, ProductImage)
 import base64
 
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from rest_framework.relations import SlugRelatedField
-from djoser.serializers import UserCreateSerializer, UserSerializer
+from djoser.serializers import UserCreateSerializer
 from rest_framework import exceptions, serializers
 from rest_framework.validators import UniqueTogetherValidator
 
@@ -37,8 +38,8 @@ class TypeSerializer(serializers.ModelSerializer):
     '''Serializer для добавления, редактирования, чтения
     и удаления подкатегории продуктов.'''
     image = Base64ImageField()
-    product_group = serializers.PrimaryKeyRelatedField(
-        queryset=Product_group.objects.all())
+    product_group = SlugRelatedField(slug_field='name',
+                                     queryset=Product_group.objects.all())
     
     class Meta:
         model = Type
@@ -135,7 +136,9 @@ class ProductReadSerializer(serializers.ModelSerializer):
     images = ProductImageSerializer(many=True, read_only=True)
     type = SlugRelatedField(slug_field='name',
                             read_only=True)
-    product_group = serializers.ReadOnlyField(source='type.product_group.name')
+    product_group = serializers.ReadOnlyField(
+        source='type.product_group.name'
+    )
     is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
@@ -145,11 +148,12 @@ class ProductReadSerializer(serializers.ModelSerializer):
             'images', 'in_stock', 'is_in_shopping_cart'
         )
     
-    def get_is_in_shopping_cart(self, obj):
+    def get_is_in_shopping_cart(self, obj) -> bool:
         '''Находится ли продукт в корзине.'''
         user = self.context.get('request').user
         if not user.is_anonymous:
-            return CartProduct.objects.filter(cart__user=user, product=obj).exists()
+            return CartProduct.objects.filter(cart__user=user,
+                                              product=obj).exists()
         return False
     
     def to_representation(self, instance):
@@ -161,27 +165,108 @@ class ProductReadSerializer(serializers.ModelSerializer):
         return representation
 
 
-class ProductInCart(serializers.ModelSerializer):
-    name = serializers.ReadOnlyField(source='product.name')
+class ProductInCartSerializer(serializers.ModelSerializer):
+    '''
+    Сериалайзер для чтения и добавления продуктов в корзину,
+    редактирования их количества, удаления из корзины
+    '''
+    product = SlugRelatedField(slug_field='name',
+                               queryset=Product.objects.all())
+    price = serializers.SerializerMethodField()
 
     class Meta:
         model = CartProduct
-        fields = ('name', 'amount')
+        fields = ('product', 'price', 'amount')
+    
+    def get_price(self, obj) -> int:
+        '''Вычисление стоимости товаров.'''
+        return obj.amount * obj.product.price
 
+    def validate(self, data):
+        product_name = data.get('product', None)
+        amount = data.get('amount', None)
+        if amount and product_name:
+            product = get_object_or_404(Product, name=product_name)
+            if amount > product.in_stock:
+                raise exceptions.ValidationError(
+                    f'Недостаточно товаров на складе. '
+                    f'Количество товаров в наличии: {product.in_stock}.'
+                )
+            if amount < 1:
+                raise exceptions.ValidationError(
+                    'Количество должно быть больше 0.'
+                )
+        return data
+
+    def create(self, validated_data):
+        '''Добавление товара в корзину с обновлением остатков.'''
+        product = validated_data['product']
+        amount = validated_data['amount']
+        cart = self.context['cart']
+        
+        try:
+            cart_product = CartProduct.objects.get(cart=cart,
+                                                   product=product)
+            cart_product.amount += amount
+        except CartProduct.DoesNotExist:
+            cart_product = CartProduct.objects.create(
+                cart=cart,
+                product=product, 
+                amount = amount
+            )
+
+        cart_product.save()
+
+        product.in_stock -= amount
+        product.save()
+
+        return cart_product
+
+    def update(self, instance, validated_data):
+        '''Обновление количества товара в корзине.'''
+        new_amount = validated_data.pop('amount', None)
+        if new_amount:
+            product = instance.product
+            diff = new_amount - instance.amount
+
+            if diff > 0 and diff > product.in_stock:
+                raise exceptions.ValidationError(
+                    f'Недостаточно товаров на складе.'
+                    f'Остаток: {product.in_stock}.'
+                )
+
+            product.in_stock -= diff
+            product.save()
+
+            instance.amount = new_amount
+            instance.save()
+
+        return instance
 
 
 class CartSerializer(serializers.ModelSerializer):
+    '''
+    Сериалайзер для операций с корзиной.
+    '''
     user = SlugRelatedField(
         slug_field='username',
         read_only=True,
         default=serializers.CurrentUserDefault()
     )
-    products = ProductInCart()
+    products = ProductInCartSerializer(many=True, source='cartproduct_set')
+    total_price = serializers.SerializerMethodField()
+    total_amount = serializers.SerializerMethodField()
 
     class Meta:
         model = Cart
         fields = (
-            'id', 'products'
+            'user', 'total_price', 'total_amount', 'products'
         )
+    
+    def get_total_price(self, instance) -> int:
+        '''Вычисление общей стоимости товаров в корзине.'''
+        return sum(item.amount * item.product.price for item in instance.cartproduct_set.all())
 
-
+    def get_total_amount(self, instance) -> int:
+        '''Вычисление общего количества товаров в корзине.'''
+        return sum(item.amount for item in instance.cartproduct_set.all())

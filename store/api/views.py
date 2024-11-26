@@ -1,12 +1,16 @@
-from django.shortcuts import render
-from products.models import User, Product, Product_group, Type, Cart
+from django.shortcuts import get_object_or_404, render
+from rest_framework.response import Response
+from products.models import User, Product, Product_group, Type, Cart, CartProduct
 from djoser.views import UserViewSet
 from rest_framework import mixins, permissions, viewsets
 from .permissions import IsAdminOrReadOnly
 from .serializers import (ProductGroupSerializer, ProductGroupReadSerializer,
                           TypeSerializer,
                           ProductAddSerializer, ProductReadSerializer,
-                          CartSerializer, ProductInCart)
+                          CartSerializer, ProductInCartSerializer)
+from django.db import transaction
+from rest_framework import status
+from rest_framework.decorators import action
 
 
 
@@ -54,11 +58,148 @@ class ProductViewSet(viewsets.ModelViewSet):
         return ProductAddSerializer
 
 
-class CartViewSet(viewsets.ModelViewSet):
+class CartViewSet(mixins.CreateModelMixin,
+                   mixins.ListModelMixin,
+                   viewsets.GenericViewSet):
     '''
     ViewSet для чтения корзины, добавления в нее продуктов, изменения
     и удаления корзины.
     '''
-    queryset = Cart.objects.all()
     permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = CartSerializer
+    pagination_class = None
+    http_method_names = ['get', 'post', 'delete', 'patch']
+
+    def get_queryset(self):
+        return Cart.objects.filter(user=self.request.user)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        if self.action in ['create', 'update', 'partial_update']:
+            context['cart'] = Cart.objects.get_or_create(user=self.request.user)[0]
+        return context
+
+    def create(self, request, *args, **kwargs):
+        '''Добавление товара в корзину.'''
+        serializer = ProductInCartSerializer(
+            data=request.data,
+            context=self.get_serializer_context())
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({'detail': 'Товар добавлен в корзину.'},
+                        status=status.HTTP_201_CREATED)
+    
+    @action(detail=False, methods=['delete'], url_path='remove-product')
+    def remove_product(self, request):
+        '''
+        Удаление одного товара из корзины.
+        '''
+        user = request.user
+        product_name = request.data.get('product', None)
+
+        if not product_name:
+            return Response({'error': 'Необходимо указать имя товара.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        product = get_object_or_404(Product, name=product_name)
+        cart = get_object_or_404(Cart, user=user)
+        cart_product = get_object_or_404(CartProduct, cart=cart, product=product)
+
+        with transaction.atomic():
+            product.in_stock += cart_product.amount
+            cart_product.delete()
+            product.save()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+    @action(detail=False, methods=['delete'], url_path='clear-cart')
+    def clear_cart(self, request):
+        '''
+        Очистка всей корзины.
+        '''
+        user = request.user
+        try:
+            cart = Cart.objects.get(user=user)
+        except Cart.DoesNotExist:
+            return Response('Ваша корзина уже пустая.',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        with transaction.atomic():
+            for cart_product in cart.cartproduct_set.all():
+                cart_product.product.in_stock += cart_product.amount
+                cart_product.product.save()
+            cart.delete()
+
+        return Response('Корзина очищена.', status=status.HTTP_204_NO_CONTENT)
+    
+    @action(detail=False, methods=['patch'], url_path='update-product')
+    def update_product(self, request):
+        '''
+        Обновление количества товара в корзине.
+        '''
+        user = request.user
+        product_name = request.data.get('product', None)
+        new_amount = request.data.get('amount', None)
+
+        if not product_name or not new_amount:
+            return Response(
+                'Необходимо указать название продукта и новое количество.',
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        cart = get_object_or_404(Cart, user=user)
+        cart_product = get_object_or_404(CartProduct, cart=cart, product__name=product_name)
+
+        product = cart_product.product
+
+        diff = new_amount - cart_product.amount
+        if diff > product.in_stock:
+            return Response(
+                f'Недостаточно товара на складе. Доступно: {product.in_stock}.',
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        with transaction.atomic():
+            cart_product.amount = new_amount
+            cart_product.save()
+
+            product.in_stock -= diff
+            product.save()
+
+        return Response(
+            f'Количество товара {product_name} обновлено до {new_amount}.',
+            status=status.HTTP_200_OK
+        )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # def destroy(self, request, *args, **kwargs):
+    #     '''
+    #     Удаление корзины пользователя и восстановление остатков продуктов.
+    #     '''
+    #     cart = self.get_queryset().first()
+    #     if not cart:
+    #         return Response({'detail': 'Корзина уже пуста.'},
+    #                         status=status.HTTP_400_BAD_REQUEST)
+
+    #     with transaction.atomic():
+    #         for cart_product in cart.cartproduct_set.all():
+    #             product = cart_product.product
+    #             product.in_stock += cart_product.amount
+    #             product.save()
+    #         cart.delete()
+
+    #     return Response({'detail': 'Корзина очищена.'}, status=status.HTTP_204_NO_CONTENT)
 

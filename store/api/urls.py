@@ -9,7 +9,7 @@ router_v1.register('users', CustomUserViewSet, basename='user')
 router_v1.register('groups', Product_groupViewSet, basename='group')
 router_v1.register('types', TypeViewSet, basename='type')
 router_v1.register('products', ProductViewSet, basename='product')
-# router_v1.register('cart', CartViewSet, basename='cart')
+router_v1.register('cart', CartViewSet, basename='cart')
 
 
 urlpatterns = [
