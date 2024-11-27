@@ -1,0 +1,228 @@
+[
+    {
+        "model": "products.ProductGroup",
+        "pk": 1,
+        "fields": {
+            "name": "Молочные продукты",
+            "slug": "dairy",
+            "image": "product_group/dairy.jpg"
+        }
+    },
+    {
+        "model": "products.ProductGroup",
+        "pk": 2,
+        "fields": {
+            "name": "Фрукты",
+            "slug": "fruits",
+            "image": "product_group/fruits.jpg"
+        }
+    },
+    {
+        "model": "products.ProductGroup",
+        "pk": 3,
+        "fields": {
+            "name": "Мясо",
+            "slug": "meat",
+            "image": "product_group/meat.jpeg"
+        }
+    },
+    {
+        "model": "products.ProductGroup",
+        "pk": 4,
+        "fields": {
+            "name": "Крупы",
+            "slug": "grains",
+            "image": "product_group/grains.jpg"
+        }
+    },
+    {
+        "model": "products.type",
+        "pk": 1,
+        "fields": {
+            "name": "Молоко",
+            "slug": "milk",
+            "product_group": 1,
+            "image": "type/milk.jpg"
+        }
+    },
+    {
+        "model": "products.type",
+        "pk": 2,
+        "fields": {
+            "name": "Сметана",
+            "slug": "sourcream",
+            "product_group": 1,
+            "image": "type/sourcream.jpg"
+        }
+    },
+    {
+        "model": "products.type",
+        "pk": 3,
+        "fields": {
+            "name": "Сыр",
+            "slug": "cheese",
+            "product_group": 1,
+            "image": "type/cheese.jpg"
+        }
+    },
+    {
+        "model": "products.type",
+        "pk": 4,
+        "fields": {
+            "name": "Ряженка",
+            "slug": "ryazhenka",
+            "product_group": 1,
+            "image": "product_group/ryazhenka.jpg"
+        }
+    },
+    {
+        "model": "products.type",
+        "pk": 5,
+        "fields": {
+            "name": "Яблоки",
+            "slug": "apple",
+            "product_group": 2,
+            "image": "product_group/apple.jpg"
+        }
+    },
+    {
+        "model": "products.product",
+        "pk": 1,
+        "fields": {
+            "name": "Молоко 2%",
+            "slug": "milk1",
+            "price": 100,
+            "in_stock": 50,
+            "type": 1
+        }
+    },
+    {
+        "model": "products.product",
+        "pk": 2,
+        "fields": {
+            "name": "Молоко 4%",
+            "slug": "milk2",
+            "price": 100,
+            "in_stock": 50,
+            "type": 1
+        }
+    },
+    {
+        "model": "products.product",
+        "pk": 3,
+        "fields": {
+            "name": "Яблоки Голден",
+            "slug": "applegolden",
+            "price": 50,
+            "in_stock": 100,
+            "type": 5
+        }
+    },
+    {
+        "model": "products.product",
+        "pk": 4,
+        "fields": {
+            "name": "Яблоки сезонные",
+            "slug": "appleseasonal",
+            "price": 40,
+            "in_stock": 100,
+            "type": 5
+        }
+    },
+    {
+        "model": "products.productimage",
+        "pk": 1,
+        "fields": {
+            "product": 3,
+            "image": "product/applegolden1.jpg"
+        }
+    },
+    {
+        "model": "products.productimage",
+        "pk": 2,
+        "fields": {
+            "product": 3,
+            "image": "product/applegolden2.jpg"
+        }
+    },
+    {
+        "model": "products.productimage",
+        "pk": 3,
+        "fields": {
+            "product": 3,
+            "image": "product/applegolden3.jpg"
+        }
+    },
+    {
+        "model": "products.productimage",
+        "pk": 4,
+        "fields": {
+            "product": 1,
+            "image": "product/milk2percent1.jpg"
+        }
+    },
+    {
+        "model": "products.productimage",
+        "pk": 5,
+        "fields": {
+            "product": 1,
+            "image": "product/milk2percent2.jpg"
+        }
+    },
+    {
+        "model": "products.productimage",
+        "pk": 6,
+        "fields": {
+            "product": 1,
+            "image": "product/milk2percent3.jpg"
+        }
+    },
+    {
+        "model": "products.productimage",
+        "pk": 7,
+        "fields": {
+            "product": 2,
+            "image": "product/milk4percent1.jpg"
+        }
+    },
+    {
+        "model": "products.productimage",
+        "pk": 8,
+        "fields": {
+            "product": 2,
+            "image": "product/milk4percent2.jpg"
+        }
+    },
+    {
+        "model": "products.productimage",
+        "pk": 9,
+        "fields": {
+            "product": 2,
+            "image": "product/milk4percent3.jpg"
+        }
+    },
+    {
+        "model": "products.productimage",
+        "pk": 10,
+        "fields": {
+            "product": 4,
+            "image": "product/apples1.jpg"
+        }
+    },
+    {
+        "model": "products.productimage",
+        "pk": 11,
+        "fields": {
+            "product": 4,
+            "image": "product/apples2.jpg"
+        }
+    },
+    {
+        "model": "products.productimage",
+        "pk": 12,
+        "fields": {
+            "product": 4,
+            "image": "product/apples3.jpg"
+        }
+    }
+]
