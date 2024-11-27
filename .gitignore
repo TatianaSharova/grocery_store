@@ -131,7 +131,4 @@ dmypy.json
 # .idea
 .idea
 
-# media
-media/
-
 #docker compose local
