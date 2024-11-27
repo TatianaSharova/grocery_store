@@ -1,5 +1,5 @@
-from pathlib import Path
 import os
+from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -66,7 +66,6 @@ DATABASES = {
 }
 
 
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -100,14 +99,11 @@ REST_FRAMEWORK = {
 DJOSER = {
     'SERIALIZERS': {
         'user_create': 'api.serializers.UserCreationSerializer',
-        # 'user': 'api.serializers.UserInfoSerializer',
-        # 'current_user': 'api.serializers.UserInfoSerializer',
     },
     'PERMISSIONS': {
         'user_list': ['rest_framework.permissions.IsAdminUser'],
         'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
     },
-    # 'HIDE_USERS': False,
 }
 
 
