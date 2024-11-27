@@ -1,13 +1,10 @@
-from datetime import datetime, timedelta
-
 import pytest
 from django.conf import settings
-from django.urls import reverse
-from django.utils import timezone
-from rest_framework.test import APIClient
-from products.models import (User, Product, Product_group, Type,
-                                   Cart, CartProduct, ProductImage)
 from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient
+
+from products.models import (Cart, CartProduct, Product, ProductGroup,
+                             ProductImage, Type)
 
 USERNAME = 'Пользователь'
 PASSWORD = 'difficultpass'
@@ -17,38 +14,20 @@ NAME = 'Название'
 SLUG = 'slug'
 PRICE = 1
 AMOUNT = 1
-IN_STOCK = 1
-
-
-
-# @pytest.fixture
-# def user():
-#     return User.objects.create_user(username=USERNAME,
-#                                     password=PASSWORD,
-#                                     email=EMAIL)
+IN_STOCK = 2
 
 
 @pytest.fixture
 def product_group():
-    return Product_group.objects.create(name=NAME, slug=SLUG, image=IMAGE)
+    return ProductGroup.objects.create(name=NAME, slug=SLUG, image=IMAGE)
 
-# @pytest.fixture
-# def token(user):
-#     """Создаем токен для пользователя."""
-#     return Token.objects.create(user=user)
-
-# @pytest.fixture
-# def client(token):
-#     """Создаем клиента для тестирования API."""
-#     client = APIClient()
-#     client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-#     return client
 
 @pytest.fixture
 def author(django_user_model):
     return django_user_model.objects.create(username=USERNAME,
                                             password=PASSWORD,
                                             email=EMAIL)
+
 
 @pytest.fixture
 def author_client(author):
@@ -57,15 +36,18 @@ def author_client(author):
     client.credentials(HTTP_AUTHORIZATION=f'Token {token.key}')
     return client
 
+
 @pytest.fixture
 def type(product_group):
     return Type.objects.create(name=NAME, slug=SLUG, image=IMAGE,
                                product_group=product_group)
 
+
 @pytest.fixture
 def product(type):
     return Product.objects.create(name=NAME, slug=SLUG, type=type,
                                   price=PRICE, in_stock=IN_STOCK)
+
 
 @pytest.fixture
 def product_images(product):
@@ -73,10 +55,13 @@ def product_images(product):
         ProductImage.objects.create(product=product, image=IMAGE)
     return ProductImage.objects.all()
 
+
 @pytest.fixture
 def cart(author):
     return Cart.objects.create(user=author)
 
+
 @pytest.fixture
 def cart_product(cart, product):
-    return CartProduct.objects.create(cart=cart, product=product, amount=AMOUNT)
+    return CartProduct.objects.create(cart=cart, product=product,
+                                      amount=AMOUNT)

@@ -1,8 +1,10 @@
-import pytest
-from products.models import (User, Product, Product_group, Type,
-                                   Cart, CartProduct, ProductImage)
-from conftest import AMOUNT
 from http import HTTPStatus
+
+import pytest
+from conftest import AMOUNT
+
+from products.models import CartProduct
+
 
 def test_add_product_to_cart(author_client, product, cart):
     '''Тестируем добавление товара в корзину.'''
@@ -16,6 +18,7 @@ def test_add_product_to_cart(author_client, product, cart):
     assert response.status_code == HTTPStatus.CREATED
     cart_product = CartProduct.objects.get(cart=cart, product=product)
     assert cart_product.amount == AMOUNT
+
 
 def test_clear_cart(author_client, product, cart):
     '''Тестируем очистку корзины.'''
@@ -57,6 +60,7 @@ def test_anonymous_user_can_read_product_groups(
     response = response.json()
     assert 'results' in response
 
+
 @pytest.mark.django_db
 def test_anonymous_user_can_read_product(
     client, product_group, type, product
@@ -64,5 +68,3 @@ def test_anonymous_user_can_read_product(
     '''Аноним может просматривать продукты.'''
     response = client.get('/api/products/')
     assert response.status_code == HTTPStatus.OK
-
-    
