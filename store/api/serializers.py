@@ -1,13 +1,13 @@
-from products.models import (User, Product, Product_group, Type,
-                             Cart, CartProduct, ProductImage)
 import base64
 
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
-from rest_framework.relations import SlugRelatedField
 from djoser.serializers import UserCreateSerializer
 from rest_framework import exceptions, serializers
-from rest_framework.validators import UniqueTogetherValidator
+from rest_framework.relations import SlugRelatedField
+
+from products.models import (Cart, CartProduct, Product, ProductGroup,
+                             ProductImage, Type, User)
 
 
 class UserCreationSerializer(UserCreateSerializer):
@@ -39,8 +39,8 @@ class TypeSerializer(serializers.ModelSerializer):
     и удаления подкатегории продуктов.'''
     image = Base64ImageField()
     product_group = SlugRelatedField(slug_field='name',
-                                     queryset=Product_group.objects.all())
-    
+                                     queryset=ProductGroup.objects.all())
+
     class Meta:
         model = Type
         fields = (
@@ -51,7 +51,7 @@ class TypeSerializer(serializers.ModelSerializer):
 class TypeSmallSerializer(serializers.ModelSerializer):
     '''Serializer для чтения списка подкатегории продуктов
     в каждой категории.'''
-    
+
     class Meta:
         model = Type
         fields = (
@@ -65,7 +65,7 @@ class ProductGroupReadSerializer(serializers.ModelSerializer):
                                 source='type_set')
 
     class Meta:
-        model = Product_group
+        model = ProductGroup
         fields = (
             'id', 'name', 'slug', 'image', 'types'
         )
@@ -77,11 +77,11 @@ class ProductGroupSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
 
     class Meta:
-        model = Product_group
+        model = ProductGroup
         fields = (
             'id', 'name', 'slug', 'image'
         )
-    
+
     def to_representation(self, instance):
         return ProductGroupReadSerializer(
             instance, context={'request': self.context.get('request')}
@@ -99,6 +99,7 @@ class ProductImageSerializer(serializers.ModelSerializer):
 class ProductImageAddSerializer(serializers.ModelSerializer):
     '''Сериализатор для изображений продукта.'''
     image = Base64ImageField()
+
     class Meta:
         model = ProductImage
         fields = ['image',]
@@ -117,14 +118,18 @@ class ProductAddSerializer(serializers.ModelSerializer):
             'name', 'slug', 'images',
             'type', 'price', 'in_stock'
         )
-    
+
     def to_representation(self, instance):
         return ProductReadSerializer(
             instance, context={'request': self.context.get('request')}
         ).data
-    
+
     def create(self, validated_data):
-        images_data = validated_data.pop('images')
+        images_data = validated_data.pop('images', [])
+        if len(images_data) != 3:
+            raise exceptions.ValidationError(
+                'Нужно добавить 3 фотографии!'
+            )
         product = Product.objects.create(**validated_data)
         for image_data in images_data:
             ProductImage.objects.create(product=product, **image_data)
@@ -147,7 +152,7 @@ class ProductReadSerializer(serializers.ModelSerializer):
             'name', 'slug', 'type', 'product_group', 'price',
             'images', 'in_stock', 'is_in_shopping_cart'
         )
-    
+
     def get_is_in_shopping_cart(self, obj) -> bool:
         '''Находится ли продукт в корзине.'''
         user = self.context.get('request').user
@@ -155,7 +160,7 @@ class ProductReadSerializer(serializers.ModelSerializer):
             return CartProduct.objects.filter(cart__user=user,
                                               product=obj).exists()
         return False
-    
+
     def to_representation(self, instance):
         '''Удаляет поле is_in_shopping_cart для анонимных пользователей.'''
         representation = super().to_representation(instance)
@@ -177,7 +182,7 @@ class ProductInCartSerializer(serializers.ModelSerializer):
     class Meta:
         model = CartProduct
         fields = ('product', 'price', 'amount')
-    
+
     def get_price(self, obj) -> int:
         '''Вычисление стоимости товаров.'''
         return obj.amount * obj.product.price
@@ -203,7 +208,7 @@ class ProductInCartSerializer(serializers.ModelSerializer):
         product = validated_data['product']
         amount = validated_data['amount']
         cart = self.context['cart']
-        
+
         try:
             cart_product = CartProduct.objects.get(cart=cart,
                                                    product=product)
@@ -211,8 +216,8 @@ class ProductInCartSerializer(serializers.ModelSerializer):
         except CartProduct.DoesNotExist:
             cart_product = CartProduct.objects.create(
                 cart=cart,
-                product=product, 
-                amount = amount
+                product=product,
+                amount=amount
             )
 
         cart_product.save()
@@ -262,7 +267,7 @@ class CartSerializer(serializers.ModelSerializer):
         fields = (
             'user', 'total_price', 'total_amount', 'products'
         )
-    
+
     def get_total_price(self, instance) -> int:
         '''Вычисление общей стоимости товаров в корзине.'''
         return sum(item.amount * item.product.price for item in instance.cartproduct_set.all())

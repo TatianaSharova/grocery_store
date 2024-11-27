@@ -1,31 +1,30 @@
-from django.shortcuts import get_object_or_404, render
-from rest_framework.response import Response
-from products.models import User, Product, Product_group, Type, Cart, CartProduct
-from djoser.views import UserViewSet
-from rest_framework import mixins, permissions, viewsets
-from .permissions import IsAdminOrReadOnly
-from .serializers import (ProductGroupSerializer, ProductGroupReadSerializer,
-                          TypeSerializer,
-                          ProductAddSerializer, ProductReadSerializer,
-                          CartSerializer, ProductInCartSerializer)
 from django.db import transaction
-from rest_framework import status
+from django.shortcuts import get_object_or_404
+from djoser.views import UserViewSet
+from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.response import Response
 
+from .permissions import IsAdminOrReadOnly
+from .serializers import (CartSerializer, ProductAddSerializer,
+                          ProductGroupReadSerializer, ProductGroupSerializer,
+                          ProductInCartSerializer, ProductReadSerializer,
+                          TypeSerializer)
+from products.models import (Cart, CartProduct, Product, ProductGroup, Type,
+                             User)
 
 
 class CustomUserViewSet(UserViewSet):
     '''ViewSet для регистрации пользователя, обновления пароля.'''
     queryset = User.objects.all()
-    # permission_classes = (IsAuthenticatedOrReadOnly,)
 
 
-class Product_groupViewSet(viewsets.ModelViewSet):
+class ProductGroupViewSet(viewsets.ModelViewSet):
     '''
     ViewSet для создания, чтения, редактирования и удаления
     продуктовой категории.
     '''
-    queryset = Product_group.objects.all()
+    queryset = ProductGroup.objects.all()
     permission_classes = (IsAdminOrReadOnly,)
 
     def get_serializer_class(self):
@@ -51,7 +50,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     '''
     queryset = Product.objects.all()
     permission_classes = (IsAdminOrReadOnly,)
-    
+
     def get_serializer_class(self):
         if self.request.method in permissions.SAFE_METHODS:
             return ProductReadSerializer
@@ -59,8 +58,8 @@ class ProductViewSet(viewsets.ModelViewSet):
 
 
 class CartViewSet(mixins.CreateModelMixin,
-                   mixins.ListModelMixin,
-                   viewsets.GenericViewSet):
+                  mixins.ListModelMixin,
+                  viewsets.GenericViewSet):
     '''
     ViewSet для чтения корзины, добавления в нее продуктов, изменения
     и удаления корзины.
@@ -76,7 +75,8 @@ class CartViewSet(mixins.CreateModelMixin,
     def get_serializer_context(self):
         context = super().get_serializer_context()
         if self.action in ['create', 'update', 'partial_update']:
-            context['cart'] = Cart.objects.get_or_create(user=self.request.user)[0]
+            context['cart'] = Cart.objects.get_or_create(
+                user=self.request.user)[0]
         return context
 
     def create(self, request, *args, **kwargs):
@@ -88,7 +88,7 @@ class CartViewSet(mixins.CreateModelMixin,
         serializer.save()
         return Response({'detail': 'Товар добавлен в корзину.'},
                         status=status.HTTP_201_CREATED)
-    
+
     @action(detail=False, methods=['delete'], url_path='remove-product')
     def remove_product(self, request):
         '''
@@ -103,7 +103,9 @@ class CartViewSet(mixins.CreateModelMixin,
 
         product = get_object_or_404(Product, name=product_name)
         cart = get_object_or_404(Cart, user=user)
-        cart_product = get_object_or_404(CartProduct, cart=cart, product=product)
+        cart_product = get_object_or_404(CartProduct,
+                                         cart=cart,
+                                         product=product)
 
         with transaction.atomic():
             product.in_stock += cart_product.amount
@@ -111,7 +113,6 @@ class CartViewSet(mixins.CreateModelMixin,
             product.save()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
-
 
     @action(detail=False, methods=['delete'], url_path='clear-cart')
     def clear_cart(self, request):
@@ -132,7 +133,7 @@ class CartViewSet(mixins.CreateModelMixin,
             cart.delete()
 
         return Response('Корзина очищена.', status=status.HTTP_204_NO_CONTENT)
-    
+
     @action(detail=False, methods=['patch'], url_path='update-product')
     def update_product(self, request):
         '''
@@ -149,14 +150,16 @@ class CartViewSet(mixins.CreateModelMixin,
             )
 
         cart = get_object_or_404(Cart, user=user)
-        cart_product = get_object_or_404(CartProduct, cart=cart, product__name=product_name)
+        cart_product = get_object_or_404(
+            CartProduct, cart=cart, product__name=product_name)
 
         product = cart_product.product
 
         diff = new_amount - cart_product.amount
         if diff > product.in_stock:
             return Response(
-                f'Недостаточно товара на складе. Доступно: {product.in_stock}.',
+                f'Недостаточно товара на складе. '
+                f'Доступно: {product.in_stock}.',
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -171,35 +174,3 @@ class CartViewSet(mixins.CreateModelMixin,
             f'Количество товара {product_name} обновлено до {new_amount}.',
             status=status.HTTP_200_OK
         )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # def destroy(self, request, *args, **kwargs):
-    #     '''
-    #     Удаление корзины пользователя и восстановление остатков продуктов.
-    #     '''
-    #     cart = self.get_queryset().first()
-    #     if not cart:
-    #         return Response({'detail': 'Корзина уже пуста.'},
-    #                         status=status.HTTP_400_BAD_REQUEST)
-
-    #     with transaction.atomic():
-    #         for cart_product in cart.cartproduct_set.all():
-    #             product = cart_product.product
-    #             product.in_stock += cart_product.amount
-    #             product.save()
-    #         cart.delete()
-
-    #     return Response({'detail': 'Корзина очищена.'}, status=status.HTTP_204_NO_CONTENT)
-
