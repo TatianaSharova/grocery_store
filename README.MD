@@ -44,7 +44,7 @@ python3 manage.py migrate
 ```
 python manage.py migrate
 ```
-3. Заполните базу данных:                                                     
+3. Заполните базу данных:
 Для Linux/macOS:
 ```
 python3 manage.py loaddata products.json
@@ -53,7 +53,7 @@ python3 manage.py loaddata products.json
 ```
 python manage.py loaddata products.json
 ```
-5. Создайте админа:            
+5. Создайте админа:
 Для Linux/macOS:
 ```
 python3 manage.py createsuperuser
