@@ -4,7 +4,7 @@ Grocery store - backend API-сервис для магазина продукт�
                      
 ___
 **Как запустить проект:**
------------
+
 Клонировать репозиторий и перейти в него в командной строке:
 
 ```
@@ -32,7 +32,7 @@ source venv/Scripts/activate
 ```
 pip install -r requirements.txt
 ```
-3. Выполнить миграции:   
+3. Выполнить миграции:
 ```
 сd store
 ```                                                         
@@ -45,6 +45,7 @@ python3 manage.py migrate
 python manage.py migrate
 ```
 3. Заполните базу данных:
+
 Для Linux/macOS:
 ```
 python3 manage.py loaddata products.json
@@ -54,6 +55,7 @@ python3 manage.py loaddata products.json
 python manage.py loaddata products.json
 ```
 5. Создайте админа:
+
 Для Linux/macOS:
 ```
 python3 manage.py createsuperuser
@@ -63,6 +65,7 @@ python3 manage.py createsuperuser
 python manage.py createsuperuser
 ```
 6. Запустить проект:
+
 Для Linux/macOS:
 ```
 python3 manage.py runserver
