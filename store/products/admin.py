@@ -1,6 +1,9 @@
 from django.contrib import admin
-from .models import Cart, Product, Product_group, Type, CartProduct, ProductImage
-from store.constans import MIN_NUM, EMPTY_VALUE
+
+from .models import (Cart, CartProduct, Product, ProductGroup, ProductImage,
+                     Type)
+from store.constans import EMPTY_VALUE, MIN_NUM
+
 
 class CartProductInline(admin.TabularInline):
     model = CartProduct
@@ -9,11 +12,11 @@ class CartProductInline(admin.TabularInline):
     min_num = MIN_NUM
     readonly_fields = ('product_price', 'total_price')
     fields = ('product', 'amount', 'product_price', 'total_price')
-    
+
     @admin.display(description='Цена за 1 шт')
     def product_price(self, obj):
         return obj.product.price
-    
+
     @admin.display(description='Итоговая цена')
     def total_price(self, obj):
         return self.product_price(obj)*obj.amount
@@ -32,8 +35,8 @@ class TypeInline(admin.TabularInline):
     min_num = MIN_NUM
 
 
-@admin.register(Product_group)
-class Product_groupAdmin(admin.ModelAdmin):
+@admin.register(ProductGroup)
+class ProductGroupAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'slug', 'image')
     search_fields = ('name', 'slug')
     empty_value_display = EMPTY_VALUE
@@ -57,7 +60,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ('type__product_group', 'type')
     inlines = (ProductImageInline,)
     empty_value_display = EMPTY_VALUE
-    
+
     @admin.display(description='Категория')
     def product_group(self, obj):
         '''Отображает категорию в списке продуктов.'''
@@ -75,15 +78,11 @@ class CartAdmin(admin.ModelAdmin):
     @admin.display(description='Продукты')
     def display_products(self, cart):
         return ', '.join([product.name for product in cart.products.all()])
-    
+
     @admin.display(description='Итоговая стоимость')
     def total_price(self, cart):
         return sum(item.amount * item.product.price for item in cart.cartproduct_set.all())
-    
+
     @admin.display(description='Количество товаров в корзине')
     def total_amount(self, cart):
         return sum(item.amount for item in cart.cartproduct_set.all())
-
-    
-
-
