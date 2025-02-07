@@ -1,14 +1,15 @@
 import os
 from pathlib import Path
 
+from django.core.management.utils import get_random_secret_key
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-)%4*c1%!$t7sj(ks*7t3qa)2uq#_23tva%)ktlx#muzc7tbz1#'
+SECRET_KEY = os.getenv('SECRET_KEY', get_random_secret_key())
 
+DEBUG = os.getenv('DEBUG_STATUS', 'False') == 'True'
 
-DEBUG = True
-
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS").split()
 
 
 INSTALLED_APPS = [
@@ -59,6 +60,18 @@ WSGI_APPLICATION = 'store.wsgi.application'
 
 
 DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('POSTGRES_DB', 'grocery'),
+        'USER': os.getenv('POSTGRES_USER', 'grocery'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'grocery'),
+        'HOST': os.getenv('DB_HOST', ''),
+        'PORT': os.getenv('DB_PORT', 5432)
+    }
+}
+
+
+DATABASES_SQLITE = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
@@ -117,10 +130,13 @@ USE_I18N = True
 
 USE_TZ = True
 
-STATIC_URL = '/static/'
+STATIC_URL = "/static/"
 
-MEDIA_URL = '/media/'
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = "/media/"
+
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
