@@ -13,6 +13,11 @@ services:
     env_file: .env
     volumes:
       - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "PGPASSWORD=${POSTGRES_PASSWORD} pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
 
   backend:
     build: ./store/
@@ -38,7 +43,7 @@ services:
   
   postgres_exporter:
     image: quay.io/prometheuscommunity/postgres-exporter
-    container_name: postgres_exporter
+    container_name: store_postgres_exporter
     env_file: .env
     environment:
       DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@store_db:5432/${POSTGRES_DB}?sslmode=disable"
@@ -47,11 +52,20 @@ services:
     depends_on:
       - postgres_db
 
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter
+    container_name: store_nginx-exporter
+    command:
+      - "-nginx.scrape-uri=http://store_nginx:80/stub_status"
+    ports:
+      - 9113:9113
+    depends_on:
+      - nginx
+
   prometheus:
-    image: prom/prometheus
-    container_name: prometheus
+    build: ./monitoring
+    container_name: store_prometheus
     volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
@@ -62,7 +76,7 @@ services:
   
   grafana:
     image: grafana/grafana
-    container_name: grafana
+    container_name: store_grafana
     volumes:
       - grafana_data:/var/lib/grafana
     ports:
