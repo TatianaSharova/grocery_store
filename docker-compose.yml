@@ -27,7 +27,8 @@ services:
       - static:/backend_static/
       - media:/app/media/
     depends_on:
-      - postgres_db
+      postgres_db:
+          condition: service_healthy
   
   nginx:
     build: ./nginx/
