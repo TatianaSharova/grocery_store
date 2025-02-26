@@ -23,12 +23,14 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
+    'django_prometheus',
     'users',
     'products',
     'api'
 ]
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -36,6 +38,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 ROOT_URLCONF = 'store.urls'
@@ -58,10 +61,11 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'store.wsgi.application'
 
+PROMETHEUS_EXPORT_MIGRATIONS = os.getenv('PROMETHEUS_EXPORT_MIGRATIONS', 'False') == 'True'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django_prometheus.db.backends.postgresql',
         'NAME': os.getenv('POSTGRES_DB', 'grocery'),
         'USER': os.getenv('POSTGRES_USER', 'grocery'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'grocery'),
