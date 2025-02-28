@@ -10,7 +10,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', get_random_secret_key())
 DEBUG = os.getenv('DEBUG_STATUS', 'False') == 'True'
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS").split()
-
+ALLOWED_HOSTS = ['*'] #TODO: return os.getenv("ALLOWED_HOSTS").split()
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -63,6 +63,8 @@ WSGI_APPLICATION = 'store.wsgi.application'
 
 PROMETHEUS_EXPORT_MIGRATIONS = os.getenv('PROMETHEUS_EXPORT_MIGRATIONS', 'False') == 'True'
 
+# PROMETHEUS_METRICS_EXPORT_PORT_RANGE = range(8001, 8050)
+
 DATABASES = {
     'default': {
         'ENGINE': 'django_prometheus.db.backends.postgresql',
@@ -82,6 +84,31 @@ DATABASES_SQLITE = {
     }
 }
 
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'handlers': {
+#         'console': {
+#             'class': 'logging.StreamHandler',
+#         },
+#     },
+#     'root': {
+#         'handlers': ['console'],
+#         'level': 'INFO',
+#     },
+#     'loggers': {
+#         'django': {
+#             'handlers': ['console'],
+#             'level': 'INFO',
+#             'propagate': True,
+#         },
+#         'django.request': {
+#             'handlers': ['console'],
+#             'level': 'INFO',
+#             'propagate': False,
+#         },
+#     },
+# }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
