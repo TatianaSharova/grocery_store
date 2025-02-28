@@ -10,7 +10,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', get_random_secret_key())
 DEBUG = os.getenv('DEBUG_STATUS', 'False') == 'True'
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS").split()
-
+ALLOWED_HOSTS = ['*'] #TODO: return os.getenv("ALLOWED_HOSTS").split()
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -23,12 +23,14 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
+    'django_prometheus',
     'users',
     'products',
     'api'
 ]
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -36,6 +38,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 ROOT_URLCONF = 'store.urls'
@@ -58,10 +61,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'store.wsgi.application'
 
+PROMETHEUS_EXPORT_MIGRATIONS = os.getenv('PROMETHEUS_EXPORT_MIGRATIONS', 'False') == 'True'
+
+# PROMETHEUS_METRICS_EXPORT_PORT_RANGE = range(8001, 8050)
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django_prometheus.db.backends.postgresql',
         'NAME': os.getenv('POSTGRES_DB', 'grocery'),
         'USER': os.getenv('POSTGRES_USER', 'grocery'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'grocery'),
@@ -78,6 +84,31 @@ DATABASES_SQLITE = {
     }
 }
 
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'handlers': {
+#         'console': {
+#             'class': 'logging.StreamHandler',
+#         },
+#     },
+#     'root': {
+#         'handlers': ['console'],
+#         'level': 'INFO',
+#     },
+#     'loggers': {
+#         'django': {
+#             'handlers': ['console'],
+#             'level': 'INFO',
+#             'propagate': True,
+#         },
+#         'django.request': {
+#             'handlers': ['console'],
+#             'level': 'INFO',
+#             'propagate': False,
+#         },
+#     },
+# }
 
 AUTH_PASSWORD_VALIDATORS = [
     {

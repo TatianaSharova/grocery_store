@@ -7,4 +7,4 @@ python manage.py loaddata products.json
 python manage.py collectstatic --noinput
 cp -r /app/static/. /backend_static/static/
 
-gunicorn --bind 0.0.0.0:8888 store.wsgi 
+gunicorn --bind 0.0.0.0:8888 store.wsgi --access-logfile -
