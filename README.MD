@@ -105,8 +105,9 @@ pytest
 После запуска проекта Prometheus доступен по ссылке: http://127.0.0.1:9090/
 Grafana доступна по ссылке: http://127.0.0.1:3000/
 
-Dashboard id для postgresql: 9628
-Dashboard id для NGINX: 12708 17452
+Dashboard id для postgresql: 9628            
+Dashboard id для NGINX: 12708 17452        
+Dashboard id для Django: 9528 7996 17658
                             
 **Документация:**                                      
 Документацию к API после запуска проекта можно посмотреть по адресам:
