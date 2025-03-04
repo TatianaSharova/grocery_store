@@ -48,8 +48,6 @@ services:
     env_file: .env
     environment:
       DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@store_db:5432/${POSTGRES_DB}?sslmode=disable"
-    ports:
-      - "9187:9187"
     depends_on:
       - postgres_db
 
@@ -58,8 +56,6 @@ services:
     container_name: store_nginx-exporter
     command:
       - "--nginx.scrape-uri=http://store_nginx:80/stub_status"
-    ports:
-      - 9113:9113
     depends_on:
       - nginx
 
