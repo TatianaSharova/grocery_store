@@ -6,7 +6,7 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
     basic_auth:
-      username: PROMETHEUS_LOGIN
+      username: PROMETHEUS_USERNAME
       password: PROMETHEUS_PASSWORD
 
   - job_name: 'postgresql'
