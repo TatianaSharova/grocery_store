@@ -7,10 +7,10 @@ for i in $(env); do
         VALUE=$(echo "$i" | sed "s/^PROMETHEUS_\([A-Z_]*\)=\(.*\)/\2/")
 
         # Заменяем переменные в файле prometheus.yml на значения из .env
-        sed -i "s/PROMETHEUS_${KEY}/${VALUE}/g" /etc/prometheus/prometheus.yml
+        sed -i "s|PROMETHEUS_${KEY}|${VALUE}|g" /etc/prometheus/prometheus.yml
 
         # Заменяем переменные в файле web.yml на значения из .env
-        sed -i "s/PROMETHEUS_${KEY}/${VALUE}/g" /etc/prometheus/web.yml
+        sed -i "s|PROMETHEUS_${KEY}|${VALUE}|g" /etc/prometheus/web.yml
     fi
 done
 
