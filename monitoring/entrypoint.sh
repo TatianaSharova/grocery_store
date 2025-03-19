@@ -14,5 +14,8 @@ for i in $(env); do
     fi
 done
 
+# Создаем диреректорию /prometheus/certs/, если она еще не создана
+mkdir -p /prometheus/certs/
+
 # Запуск Prometheus
 exec /bin/prometheus "$@"
