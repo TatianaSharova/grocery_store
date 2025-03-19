@@ -5,6 +5,9 @@ scrape_configs:
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
+    scheme: https
+    tls_config:
+      ca_file: /prometheus/certs/server.crt
     basic_auth:
       username: PROMETHEUS_USERNAME
       password: PROMETHEUS_PASSWORD
