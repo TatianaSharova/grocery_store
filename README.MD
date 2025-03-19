@@ -102,8 +102,49 @@ pytest
 ```
 
 **Мониторинг**
-После запуска проекта Prometheus доступен по ссылке: http://127.0.0.1:9090/
-Grafana доступна по ссылке: http://127.0.0.1:3000/
+В качестве системы мониторинга к проекту подключен Prometheus, который собирает и хранит метрики, и Grafana, визуализирующая эти метрики. Чтобы защитить передаваемые данные, необходимо подключить TLS-сертификат к Prometheus и Grafana.       
+      
+Для подключения TLS к Prometheus необхожимо создать сертификаты и добавить их в контейнер store_prometheus. Настройки для создания ключей находятся в файле monitoring/ssl_certs/openssl.cnf.      
+Шаги для подключения TLS к Prometheus:    
+
+1. Переходим в папку monitoring/ssl_certs:
+```
+cd monitoring/ssl_certs
+```
+2. Генерируем приватный ключ для подписи сертификатов, выданных вашим центром сертификации (CA):
+```
+openssl genrsa -out ca.key 2048
+```
+3. Создаем самоподписанный сертификат для центра сертификации (CA):
+```
+openssl req -new -x509 -days 365 -key ca.key -out ca.crt -config openssl.cnf
+```
+4. Генерируем новый приватный ключ и запрос на сертификат CSR (Certificate Signing Request):
+```
+openssl req -newkey rsa:2048 -nodes -keyout server.key -config openssl.cnf -out server.csr
+```
+5. Создаем подписанный сертификат на основе CSR:
+```
+openssl x509 -req -extfile openssl.cnf -days 365 -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -sha256 -extensions req_ext
+```
+6. Необходимо поместить полученные файлы server.crt и server.key внутрь контейнера store_prometheus в директорию /prometheus/certs/. Перед этим необходимо добавить в .env CERTS_PATH='/c/user/.../grocery_store/monitoring/ssl_certs' cо значением полного пути до директории ssl_certs на вашем локальном компьютере (или выполнить в терминале: export CERTS_PATH='/c/user/.../grocery_store/monitoring/ssl_certs').    
+Далее в отдельном терминале выполните скрипт:
+```
+chmod +x copy_certs.sh
+
+bash copy_certs.sh
+```
+7. Перезапустите контейнер store_prometheus:
+```
+docker restart store_prometheus
+```
+8. Вы можете проверить, содержит ли ваш сертификат SAN (Subject Alternative Name), для этого в директории с созданными ключами выполните:
+```
+openssl x509 -in server.crt -text -noout
+```
+         
+После запуска проекта Prometheus доступен по ссылке: https://localhost:9090/
+Grafana доступна по ссылке: http://localhost:3000/
 
 Dashboard id для postgresql: 9628            
 Dashboard id для NGINX: 12708 17452        
