@@ -143,7 +143,7 @@ docker restart store_prometheus
 openssl x509 -in server.crt -text -noout
 ```
          
-После запуска проекта Prometheus доступен по ссылке: https://localhost:9090/
+После запуска проекта Prometheus доступен по ссылке: https://localhost:9090/prometheus
 Grafana доступна по ссылке: http://localhost:3000/
 
 Dashboard id для postgresql: 9628            
