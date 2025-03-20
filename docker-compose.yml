@@ -80,6 +80,9 @@ services:
     container_name: store_grafana
     volumes:
       - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SERVER_ROOT_URL=http://${MONITORING_URL}/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
     ports:
       - "3000:3000"
     depends_on:
