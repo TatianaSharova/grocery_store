@@ -65,6 +65,10 @@ services:
     env_file: .env
     volumes:
       - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--web.config.file=/etc/prometheus/web.yml"
+      - "--web.external-url=https://${MONITORING_URL}/prometheus/"
     ports:
       - "9090:9090"
     depends_on:
