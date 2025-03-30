@@ -12,6 +12,8 @@ DEBUG = os.getenv('DEBUG_STATUS', 'False') == 'True'
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS").split()
 
 INSTALLED_APPS = [
+    'admin_interface',
+    'colorfield',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -27,6 +29,9 @@ INSTALLED_APPS = [
     'products',
     'api'
 ]
+
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+SILENCED_SYSTEM_CHECKS = ['security.W019']
 
 MIDDLEWARE = [
     'django_prometheus.middleware.PrometheusBeforeMiddleware',
