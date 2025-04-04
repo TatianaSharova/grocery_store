@@ -107,7 +107,7 @@ pytest
 -----------
 В качестве системы мониторинга к проекту подключен Prometheus, который собирает и хранит метрики, и Grafana, визуализирующая эти метрики. Чтобы защитить передаваемые данные, необходимо подключить TLS-сертификат к Prometheus и Grafana.       
       
-Для подключения TLS к Prometheus необхожимо создать сертификаты и добавить их в контейнер store_prometheus. Настройки для создания ключей находятся в файле monitoring/ssl_certs/openssl.cnf.      
+Для подключения TLS к Prometheus необходимо создать сертификаты и добавить их в контейнер store_prometheus. Настройки для создания ключей находятся в файле monitoring/ssl_certs/openssl.cnf.      
 Шаги для подключения TLS к Prometheus:    
 
 1. Переходим в папку monitoring/ssl_certs:
@@ -130,8 +130,9 @@ openssl req -newkey rsa:2048 -nodes -keyout server.key -config openssl.cnf -out 
 ```
 openssl x509 -req -extfile openssl.cnf -days 365 -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -sha256 -extensions req_ext
 ```
-6. Необходимо поместить полученные файлы server.crt и server.key внутрь контейнера store_prometheus в директорию /prometheus/certs/. Перед этим необходимо добавить в .env CERTS_PATH='/c/user/.../grocery_store/monitoring/ssl_certs' cо значением полного пути до директории ssl_certs на вашем локальном компьютере (или выполнить в терминале: export CERTS_PATH='/c/user/.../grocery_store/monitoring/ssl_certs').    
-Далее в отдельном терминале выполните скрипт:
+6. Необходимо поместить полученные файлы server.crt и server.key внутрь контейнера store_prometheus в директорию /prometheus/certs/. Перед этим необходимо добавить в .env CERTS_PATH='/c/user/.../grocery_store/monitoring/ssl_certs' cо значением полного пути до директории ssl_certs на вашем локальном компьютере (или выполнить в терминале: export CERTS_PATH='/c/user/.../grocery_store/monitoring/ssl_certs').     
+
+Далее в отдельном терминале в директории monitoring/ssl_certs/ выполните скрипт:
 ```
 chmod +x copy_certs.sh
 
