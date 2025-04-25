@@ -13,7 +13,7 @@ git clone https://github.com/TatianaSharova/grocery_store.git
 ```
 **_Запуск проекта через docker-compose:_**  
 
-2. Используйте .env.example и создайте свой .env в корне проекта.                                              
+2. Используйте за основу .env.example и создайте свой .env в корне проекта.                                              
 3. В терминал для запуска выполните команду:
 
 ```bash
